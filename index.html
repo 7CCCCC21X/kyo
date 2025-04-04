@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>KYO 徽章批量查询</title>
+  <title>索尼徽章批量查询（陆续更新）</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -64,12 +64,13 @@
 </head>
 <body>
 
-  <h2>KYO 徽章批量查询</h2>
+  <h2>索尼徽章批量查询（陆续更新）</h2>
   <p>每行一个钱包地址：</p>
-  <textarea id="input" placeholder=""></textarea><br>
+  <textarea id="input" placeholder="0x123...\n0xabc..."></textarea><br>
   <button id="queryBtn" onclick="check()">开始查询</button>
 
   <div class="summary" id="summary"></div>
+  <div class="summary" id="holdersCount"></div>
 
   <table id="resultTable" style="display:none;">
     <thead>
@@ -94,24 +95,30 @@
       const tbody = document.getElementById("resultBody");
       const table = document.getElementById("resultTable");
       const summary = document.getElementById("summary");
+      const holders = document.getElementById("holdersCount");
 
       btn.innerText = "查询中...";
       btn.disabled = true;
       tbody.innerHTML = "";
       table.style.display = "table";
       summary.innerText = "";
+      holders.innerText = "";
 
       let hasCount = 0;
+      let holdersShown = false;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
         const row = document.createElement("tr");
+
         try {
           const url = `https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`;
           const res = await fetch(url);
           const json = await res.json();
 
-          const hasKyo = (json.items || []).some(item => item.token?.address?.toLowerCase() === kyoNFT.toLowerCase());
+          const items = json.items || [];
+          const kyoItem = items.find(item => item.token?.address?.toLowerCase() === kyoNFT);
+          const hasKyo = Boolean(kyoItem);
 
           if (hasKyo) hasCount++;
 
@@ -121,10 +128,18 @@
             <td>${addr}</td>
             <td>${hasKyo ? "✅ 是" : "❌ 否"}</td>
           `;
+
+          // 显示持有人数（只展示一次）
+          if (hasKyo && !holdersShown && kyoItem?.token?.holders) {
+            holders.innerText = `📊 当前持有 KYO 徽章的钱包数：${kyoItem.token.holders}`;
+            holdersShown = true;
+          }
+
         } catch (e) {
           row.className = "fail";
           row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td>❌ 查询失败</td>`;
         }
+
         tbody.appendChild(row);
       }
 
