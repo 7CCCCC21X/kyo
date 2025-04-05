@@ -70,11 +70,17 @@
   <button id="queryBtn" onclick="check()">开始查询</button>
 
   <div class="summary" id="summary"></div>
-  <div class="summary" id="holdersCount"></div>
+  <div class="summary" id="kyoHolders"></div>
+  <div class="summary" id="sakeHolders"></div>
 
   <table id="resultTable" style="display:none;">
     <thead>
-      <tr><th>序号</th><th>地址</th><th>是否拥有 KYO 徽章</th></tr>
+      <tr>
+        <th>序号</th>
+        <th>地址</th>
+        <th>KYO 徽章</th>
+        <th>Sake 徽章</th>
+      </tr>
     </thead>
     <tbody id="resultBody"></tbody>
   </table>
@@ -85,6 +91,7 @@
 
   <script>
     const kyoNFT = "0x11b2876c58cfb7501db60d0112af8a8efeb0a81d";
+    const sakeNFT = "0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3";
 
     async function check() {
       const raw = document.getElementById("input").value.trim();
@@ -95,17 +102,21 @@
       const tbody = document.getElementById("resultBody");
       const table = document.getElementById("resultTable");
       const summary = document.getElementById("summary");
-      const holders = document.getElementById("holdersCount");
+      const kyoHolders = document.getElementById("kyoHolders");
+      const sakeHolders = document.getElementById("sakeHolders");
 
       btn.innerText = "查询中...";
       btn.disabled = true;
       tbody.innerHTML = "";
       table.style.display = "table";
       summary.innerText = "";
-      holders.innerText = "";
+      kyoHolders.innerText = "";
+      sakeHolders.innerText = "";
 
-      let hasCount = 0;
-      let holdersShown = false;
+      let kyoCount = 0;
+      let sakeCount = 0;
+      let kyoHolderShown = false;
+      let sakeHolderShown = false;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
@@ -117,33 +128,42 @@
           const json = await res.json();
 
           const items = json.items || [];
+          const hasKyo = items.some(item => item.token?.address?.toLowerCase() === kyoNFT);
+          const hasSake = items.some(item => item.token?.address?.toLowerCase() === sakeNFT);
+
           const kyoItem = items.find(item => item.token?.address?.toLowerCase() === kyoNFT);
-          const hasKyo = Boolean(kyoItem);
+          const sakeItem = items.find(item => item.token?.address?.toLowerCase() === sakeNFT);
 
-          if (hasKyo) hasCount++;
+          if (hasKyo) kyoCount++;
+          if (hasSake) sakeCount++;
 
-          row.className = hasKyo ? "success" : "fail";
+          row.className = hasKyo || hasSake ? "success" : "fail";
           row.innerHTML = `
             <td>${i + 1}</td>
             <td>${addr}</td>
             <td>${hasKyo ? "✅ 是" : "❌ 否"}</td>
+            <td>${hasSake ? "✅ 是" : "❌ 否"}</td>
           `;
 
-          // 显示持有人数（只展示一次）
-          if (hasKyo && !holdersShown && kyoItem?.token?.holders) {
-            holders.innerText = `📊 当前持有 KYO 徽章的钱包数：${kyoItem.token.holders}`;
-            holdersShown = true;
+          if (hasKyo && !kyoHolderShown && kyoItem?.token?.holders) {
+            kyoHolders.innerText = `📊 当前持有 KYO 徽章的钱包数：${kyoItem.token.holders}`;
+            kyoHolderShown = true;
+          }
+
+          if (hasSake && !sakeHolderShown && sakeItem?.token?.holders) {
+            sakeHolders.innerText = `📊 当前持有 Sake 徽章的钱包数：${sakeItem.token.holders}`;
+            sakeHolderShown = true;
           }
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td>❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="2">❌ 查询失败</td>`;
         }
 
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，拥有 KYO 徽章：${hasCount} 个`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，拥有 KYO 徽章：${kyoCount} 个，Sake 徽章：${sakeCount} 个`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
