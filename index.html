@@ -21,7 +21,7 @@
       border-radius: 6px;
       color: #333;
     }
-    button {
+    button, .link-btn {
       padding: 10px 20px;
       background: #4caf50;
       color: white;
@@ -29,6 +29,9 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 15px;
+      text-decoration: none;
+      margin-right: 10px;
+      display: inline-block;
     }
     button:disabled {
       background: #9e9e9e;
@@ -68,10 +71,13 @@
   <p>每行一个钱包地址：</p>
   <textarea id="input" placeholder=""></textarea><br>
   <button id="queryBtn" onclick="check()">开始查询</button>
+  <a href="https://badge.sonus.exchange/claim" target="_blank" class="link-btn">🎁 领取 Sonus 徽章</a>
 
   <div class="summary" id="summary"></div>
   <div class="summary" id="kyoHolders"></div>
   <div class="summary" id="sakeHolders"></div>
+  <div class="summary" id="sonusQualified"></div>
+  <div class="summary" id="sonusHolders"></div>
 
   <table id="resultTable" style="display:none;">
     <thead>
@@ -80,6 +86,8 @@
         <th>地址</th>
         <th>KYO 徽章</th>
         <th>Sake 徽章</th>
+        <th>Sonus资格</th>
+        <th>Sonus徽章</th>
       </tr>
     </thead>
     <tbody id="resultBody"></tbody>
@@ -92,6 +100,25 @@
   <script>
     const kyoNFT = "0x11b2876c58cfb7501db60d0112af8a8efeb0a81d";
     const sakeNFT = "0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3";
+    const sonusNFT = "0x066aba7c3520e300113c0515ff41c084ee0c95ea";
+    let sonusBadgeSet = new Set();
+
+    async function loadSonusBadgeData() {
+      try {
+        const res = await fetch("https://badge.sonus.exchange/static/js/main.5227d81e.js");
+        const text = await res.text();
+        const matches = text.match(/"0x[a-fA-F0-9]{40}":1/g);
+        if (matches) {
+          matches.forEach(match => {
+            const addr = match.slice(1, 43).toLowerCase();
+            sonusBadgeSet.add(addr);
+          });
+        }
+        document.getElementById("sonusQualified").innerText = `📦 Sonus 徽章 符合资格人数：${sonusBadgeSet.size}`;
+      } catch (err) {
+        document.getElementById("sonusQualified").innerText = `❌ 无法加载 Sonus资格数据：${err.message}`;
+      }
+    }
 
     async function check() {
       const raw = document.getElementById("input").value.trim();
@@ -104,6 +131,7 @@
       const summary = document.getElementById("summary");
       const kyoHolders = document.getElementById("kyoHolders");
       const sakeHolders = document.getElementById("sakeHolders");
+      const sonusHolders = document.getElementById("sonusHolders");
 
       btn.innerText = "查询中...";
       btn.disabled = true;
@@ -112,61 +140,74 @@
       summary.innerText = "";
       kyoHolders.innerText = "";
       sakeHolders.innerText = "";
+      sonusHolders.innerText = "";
 
-      let kyoCount = 0;
-      let sakeCount = 0;
-      let kyoHolderShown = false;
-      let sakeHolderShown = false;
+      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0;
+      let kyoShown = false, sakeShown = false, sonusShown = false;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
         const row = document.createElement("tr");
 
-        try {
-          const url = `https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`;
-          const res = await fetch(url);
-          const json = await res.json();
+        let hasKyo = false, hasSake = false, hasSonusNFT = false;
+        const hasSonusList = sonusBadgeSet.has(addr);
 
+        try {
+          const res = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`);
+          const json = await res.json();
           const items = json.items || [];
-          const hasKyo = items.some(item => item.token?.address?.toLowerCase() === kyoNFT);
-          const hasSake = items.some(item => item.token?.address?.toLowerCase() === sakeNFT);
 
           const kyoItem = items.find(item => item.token?.address?.toLowerCase() === kyoNFT);
           const sakeItem = items.find(item => item.token?.address?.toLowerCase() === sakeNFT);
+          const sonusItem = items.find(item => item.token?.address?.toLowerCase() === sonusNFT);
+
+          hasKyo = !!kyoItem;
+          hasSake = !!sakeItem;
+          hasSonusNFT = !!sonusItem;
 
           if (hasKyo) kyoCount++;
           if (hasSake) sakeCount++;
+          if (hasSonusList) sonusListCount++;
+          if (hasSonusNFT) sonusNFTCount++;
 
-          row.className = hasKyo || hasSake ? "success" : "fail";
-          row.innerHTML = `
-            <td>${i + 1}</td>
-            <td>${addr}</td>
-            <td>${hasKyo ? "✅ 是" : "❌ 否"}</td>
-            <td>${hasSake ? "✅ 是" : "❌ 否"}</td>
-          `;
-
-          if (hasKyo && !kyoHolderShown && kyoItem?.token?.holders) {
+          if (hasKyo && !kyoShown && kyoItem?.token?.holders) {
             kyoHolders.innerText = `📊 当前持有 KYO 徽章的钱包数：${kyoItem.token.holders}`;
-            kyoHolderShown = true;
+            kyoShown = true;
           }
-
-          if (hasSake && !sakeHolderShown && sakeItem?.token?.holders) {
+          if (hasSake && !sakeShown && sakeItem?.token?.holders) {
             sakeHolders.innerText = `📊 当前持有 Sake 徽章的钱包数：${sakeItem.token.holders}`;
-            sakeHolderShown = true;
+            sakeShown = true;
+          }
+          if (hasSonusNFT && !sonusShown && sonusItem?.token?.holders) {
+            sonusHolders.innerText = `📊 当前持有 Sonus 徽章的钱包数：${sonusItem.token.holders}`;
+            sonusShown = true;
           }
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="2">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="4">❌ 查询失败</td>`;
+          tbody.appendChild(row);
+          continue;
         }
 
+        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT ? "success" : "fail";
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${addr}</td>
+          <td>${hasKyo ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasSake ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasSonusList ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasSonusNFT ? "✅ 是" : "❌ 否"}</td>
+        `;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，拥有 KYO 徽章：${kyoCount} 个，Sake 徽章：${sakeCount} 个`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
+
+    loadSonusBadgeData();
   </script>
 
 </body>
