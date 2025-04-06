@@ -59,7 +59,7 @@
       font-size: 13px;
     }
     .summary {
-      margin-top: 15px;
+      margin-top: 10px;
       font-weight: bold;
       font-size: 15px;
     }
@@ -73,12 +73,13 @@
   <button id="queryBtn" onclick="check()">开始查询</button>
   <a href="https://badge.sonus.exchange/claim" target="_blank" class="link-btn">🎁 领取 Sonus 徽章</a>
 
-  <div class="summary" id="summary"></div>
+  <!-- 统计信息顺序优化后 -->
+  <div class="summary" id="sonusQualified"></div>
   <div class="summary" id="kyoHolders"></div>
   <div class="summary" id="sakeHolders"></div>
-  <div class="summary" id="sonusQualified"></div>
   <div class="summary" id="sonusHolders"></div>
   <div class="summary" id="ogHolders"></div>
+  <div class="summary" id="summary"></div>
 
   <table id="resultTable" style="display:none;">
     <thead>
