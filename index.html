@@ -78,6 +78,7 @@
   <div class="summary" id="sakeHolders"></div>
   <div class="summary" id="sonusQualified"></div>
   <div class="summary" id="sonusHolders"></div>
+  <div class="summary" id="ogHolders"></div>
 
   <table id="resultTable" style="display:none;">
     <thead>
@@ -88,6 +89,7 @@
         <th>Sake 徽章</th>
         <th>Sonus资格</th>
         <th>Sonus徽章</th>
+        <th>OG 徽章</th>
       </tr>
     </thead>
     <tbody id="resultBody"></tbody>
@@ -101,6 +103,7 @@
     const kyoNFT = "0x11b2876c58cfb7501db60d0112af8a8efeb0a81d";
     const sakeNFT = "0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3";
     const sonusNFT = "0x066aba7c3520e300113c0515ff41c084ee0c95ea";
+    const ogNFT = "0x2A21B17E366836e5FFB19bd47edB03b4b551C89d";
     let sonusBadgeSet = new Set();
 
     async function loadSonusBadgeData() {
@@ -132,6 +135,7 @@
       const kyoHolders = document.getElementById("kyoHolders");
       const sakeHolders = document.getElementById("sakeHolders");
       const sonusHolders = document.getElementById("sonusHolders");
+      const ogHolders = document.getElementById("ogHolders");
 
       btn.innerText = "查询中...";
       btn.disabled = true;
@@ -141,25 +145,26 @@
       kyoHolders.innerText = "";
       sakeHolders.innerText = "";
       sonusHolders.innerText = "";
+      ogHolders.innerText = "";
 
-      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0;
-      let kyoShown = false, sakeShown = false, sonusShown = false;
+      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0;
+      let kyoShown = false, sakeShown = false, sonusShown = false, ogShown = false;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
         const row = document.createElement("tr");
 
-        let hasKyo = false, hasSake = false, hasSonusNFT = false;
+        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false;
         const hasSonusList = sonusBadgeSet.has(addr);
 
         try {
-          const res = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`);
-          const json = await res.json();
-          const items = json.items || [];
+          const res721 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`);
+          const json721 = await res721.json();
+          const items721 = json721.items || [];
 
-          const kyoItem = items.find(item => item.token?.address?.toLowerCase() === kyoNFT);
-          const sakeItem = items.find(item => item.token?.address?.toLowerCase() === sakeNFT);
-          const sonusItem = items.find(item => item.token?.address?.toLowerCase() === sonusNFT);
+          const kyoItem = items721.find(item => item.token?.address?.toLowerCase() === kyoNFT.toLowerCase());
+          const sakeItem = items721.find(item => item.token?.address?.toLowerCase() === sakeNFT.toLowerCase());
+          const sonusItem = items721.find(item => item.token?.address?.toLowerCase() === sonusNFT.toLowerCase());
 
           hasKyo = !!kyoItem;
           hasSake = !!sakeItem;
@@ -183,14 +188,26 @@
             sonusShown = true;
           }
 
+          const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-1155`);
+          const json1155 = await res1155.json();
+          const items1155 = json1155.items || [];
+          const ogItem = items1155.find(item => item.token?.address?.toLowerCase() === ogNFT.toLowerCase());
+          hasOG = !!ogItem;
+          if (hasOG) ogCount++;
+
+          if (hasOG && !ogShown && ogItem?.token?.holders) {
+            ogHolders.innerText = `📊 当前持有 OG 徽章的钱包数：${ogItem.token.holders}`;
+            ogShown = true;
+          }
+
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="4">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="5">❌ 查询失败</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT ? "success" : "fail";
+        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG ? "success" : "fail";
         row.innerHTML = `
           <td>${i + 1}</td>
           <td>${addr}</td>
@@ -198,11 +215,12 @@
           <td>${hasSake ? "✅ 是" : "❌ 否"}</td>
           <td>${hasSonusList ? "✅ 是" : "❌ 否"}</td>
           <td>${hasSonusNFT ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasOG ? "✅ 是" : "❌ 否"}</td>
         `;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
