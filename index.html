@@ -105,7 +105,7 @@
 
     async function loadSonusBadgeData() {
       try {
-        const res = await fetch("https://badge.sonus.exchange/static/js/main.5227d81e.js");
+        const res = await fetch("https://badge.sonus.exchange/static/js/main.590f19d7.js");
         const text = await res.text();
         const matches = text.match(/"0x[a-fA-F0-9]{40}":1/g);
         if (matches) {
