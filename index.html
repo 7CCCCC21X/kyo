@@ -111,7 +111,7 @@
     const sakeNFT = "0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3";
     const sonusNFT = "0x066aba7c3520e300113c0515ff41c084ee0c95ea";
     const ogNFT = "0x2A21B17E366836e5FFB19bd47edB03b4b551C89d";
-    const unemetaNFT = "0xCA707D22E248740aDaA9C63580F7A35201B18d30"; // Unemeta 合约地址
+    const unemetaNFT = "0xCA707D22E248740aDaA9C63580F7A35201B18d30"; // Unemeta 合约地址（改为从 ERC-721 接口查询）
     const owltoNFT = "0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb"; // Owlto 合约地址
     let sonusBadgeSet = new Set();
 
@@ -181,6 +181,7 @@
         const hasSonusList = sonusBadgeSet.has(addr);
 
         try {
+          // ERC-721查询
           const res721 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`);
           const json721 = await res721.json();
           const items721 = json721.items || [];
@@ -188,16 +189,21 @@
           const kyoItem = items721.find(item => item.token?.address?.toLowerCase() === kyoNFT.toLowerCase());
           const sakeItem = items721.find(item => item.token?.address?.toLowerCase() === sakeNFT.toLowerCase());
           const sonusItem = items721.find(item => item.token?.address?.toLowerCase() === sonusNFT.toLowerCase());
+          // 现在将 Unemeta 徽章也从 ERC-721 中查找
+          const unemetaItem = items721.find(item => item.token?.address?.toLowerCase() === unemetaNFT.toLowerCase());
 
           hasKyo = !!kyoItem;
           hasSake = !!sakeItem;
           hasSonusNFT = !!sonusItem;
+          hasUnemeta = !!unemetaItem;
 
           if (hasKyo) kyoCount++;
           if (hasSake) sakeCount++;
           if (hasSonusList) sonusListCount++;
           if (hasSonusNFT) sonusNFTCount++;
+          if (hasUnemeta) unemetaCount++;
 
+          // ERC-1155查询
           const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-1155`);
           const json1155 = await res1155.json();
           const items1155 = json1155.items || [];
@@ -205,10 +211,6 @@
           const ogItem = items1155.find(item => item.token?.address?.toLowerCase() === ogNFT.toLowerCase());
           hasOG = !!ogItem;
           if (hasOG) ogCount++;
-
-          const unemetaItem = items1155.find(item => item.token?.address?.toLowerCase() === unemetaNFT.toLowerCase());
-          hasUnemeta = !!unemetaItem;
-          if (hasUnemeta) unemetaCount++;
 
           const owltoItem = items1155.find(item => item.token?.address?.toLowerCase() === owltoNFT.toLowerCase());
           hasOwlto = !!owltoItem;
