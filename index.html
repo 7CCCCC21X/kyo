@@ -140,7 +140,7 @@
     // 加载 Sonus 徽章资格数据
     async function loadSonusBadgeData() {
       try {
-        const res = await fetch("https://badge.sonus.exchange/static/js/main.590f19d7.js");
+        const res = await fetch("https://badge.sonus.exchange/static/js/main.dace8027.js");
         const text = await res.text();
         const matches = text.match(/"0x[a-fA-F0-9]{40}":1/g);
         if (matches) {
