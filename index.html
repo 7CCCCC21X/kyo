@@ -46,7 +46,7 @@
       border-collapse: collapse;
       font-size: 14px;
       white-space: nowrap;
-      min-width: 1100px;
+      min-width: 1200px;
     }
     th, td {
       padding: 10px;
@@ -88,6 +88,7 @@
   <div class="summary" id="unemetaHolders"></div>
   <div class="summary" id="owltoHolders"></div>
   <div class="summary" id="sonovaHolders"></div>
+  <div class="summary" id="velodromeHolders"></div>
   <div class="summary" id="summary"></div>
 
   <div class="table-wrapper">
@@ -104,6 +105,7 @@
           <th>Unemeta 徽章</th>
           <th>Owlto 徽章</th>
           <th>Sonova 徽章</th>
+          <th>Velodrome 徽章</th>
         </tr>
       </thead>
       <tbody id="resultBody"></tbody>
@@ -122,6 +124,7 @@
     const unemetaNFT = "0xCA707D22E248740aDaA9C63580F7A35201B18d30";
     const owltoNFT = "0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb";
     const sonovaNFT = "0x4A33e2E308E5d9C0188d209F1bF443Ff7CfB4A31";
+    const velodromeNFT = "0x2DCD9B33F0721000Dc1F8f84B804d4CFA23d7713";
 
     let sonusBadgeSet = new Set();
 
@@ -133,7 +136,8 @@
         { url: `https://soneium.blockscout.com/api/v2/tokens/${sonusNFT}`, id: "sonusHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${unemetaNFT}`, id: "unemetaHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${owltoNFT}`, id: "owltoHolders" },
-        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonovaNFT}`, id: "sonovaHolders" }
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonovaNFT}`, id: "sonovaHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${velodromeNFT}`, id: "velodromeHolders" }
       ];
 
       for (let { url, id } of badgeAPIs) {
@@ -180,13 +184,13 @@
       table.style.display = "table";
       summary.innerText = "";
 
-      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0, unemetaCount = 0, owltoCount = 0, sonovaCount = 0;
+      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0, unemetaCount = 0, owltoCount = 0, sonovaCount = 0, velodromeCount = 0;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
         const row = document.createElement("tr");
 
-        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false, hasUnemeta = false, hasOwlto = false, hasSonova = false;
+        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false, hasUnemeta = false, hasOwlto = false, hasSonova = false, hasVelodrome = false;
         const hasSonusList = sonusBadgeSet.has(addr);
 
         try {
@@ -201,6 +205,7 @@
           hasSonusNFT = checkNFT(sonusNFT);
           hasUnemeta = checkNFT(unemetaNFT);
           hasSonova = checkNFT(sonovaNFT);
+          hasVelodrome = checkNFT(velodromeNFT);
 
           if (hasKyo) kyoCount++;
           if (hasSake) sakeCount++;
@@ -208,6 +213,7 @@
           if (hasSonusList) sonusListCount++;
           if (hasUnemeta) unemetaCount++;
           if (hasSonova) sonovaCount++;
+          if (hasVelodrome) velodromeCount++;
 
           const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-1155`);
           const json1155 = await res1155.json();
@@ -221,12 +227,12 @@
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="9">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="10">❌ 查询失败</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova ? "success" : "fail";
+        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome ? "success" : "fail";
         row.innerHTML = `
           <td>${i + 1}</td>
           <td>${addr}</td>
@@ -238,11 +244,12 @@
           <td>${hasUnemeta ? "✅ 是" : "❌ 否"}</td>
           <td>${hasOwlto ? "✅ 是" : "❌ 否"}</td>
           <td>${hasSonova ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasVelodrome ? "✅ 是" : "❌ 否"}</td>
         `;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
