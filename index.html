@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>索尼徽章批量查询（陆续更新）</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -46,7 +47,7 @@
       border-collapse: collapse;
       font-size: 14px;
       white-space: nowrap;
-      min-width: 1200px;
+      min-width: 1500px;
     }
     th, td {
       padding: 10px;
@@ -79,6 +80,7 @@
   <a href="https://badge.sonus.exchange/claim" target="_blank" class="link-btn">🎁 领取 Sonus 徽章</a>
   <a href="https://soneiumevent.unemeta.com/mint" target="_blank" class="link-btn">🎁 领取 Unemeta 徽章</a>
   <a href="https://owlto.finance/soneium-badge" target="_blank" class="link-btn">🎁 领取 Owlto 徽章</a>
+  <a href="https://app.wavex.fi/rewards" target="_blank" class="link-btn">🎁 领取 WaveX 徽章</a>
 
   <div class="summary" id="sonusQualified"></div>
   <div class="summary" id="kyoHolders"></div>
@@ -89,6 +91,7 @@
   <div class="summary" id="owltoHolders"></div>
   <div class="summary" id="sonovaHolders"></div>
   <div class="summary" id="velodromeHolders"></div>
+  <div class="summary" id="wavexHolders"></div>
   <div class="summary" id="summary"></div>
 
   <div class="table-wrapper">
@@ -106,6 +109,8 @@
           <th>Owlto 徽章</th>
           <th>Sonova 徽章</th>
           <th>Velodrome 徽章</th>
+          <th>WaveX 资格</th>
+          <th>WaveX 徽章</th>
         </tr>
       </thead>
       <tbody id="resultBody"></tbody>
@@ -125,6 +130,7 @@
     const owltoNFT = "0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb";
     const sonovaNFT = "0x4A33e2E308E5d9C0188d209F1bF443Ff7CfB4A31";
     const velodromeNFT = "0x2DCD9B33F0721000Dc1F8f84B804d4CFA23d7713";
+    const wavexNFT = "0x4a3b67b339c272fab639b0caf3ce7852b2aa0833";
 
     let sonusBadgeSet = new Set();
 
@@ -137,9 +143,9 @@
         { url: `https://soneium.blockscout.com/api/v2/tokens/${unemetaNFT}`, id: "unemetaHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${owltoNFT}`, id: "owltoHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${sonovaNFT}`, id: "sonovaHolders" },
-        { url: `https://soneium.blockscout.com/api/v2/tokens/${velodromeNFT}`, id: "velodromeHolders" }
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${velodromeNFT}`, id: "velodromeHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${wavexNFT}`, id: "wavexHolders" }
       ];
-
       for (let { url, id } of badgeAPIs) {
         try {
           const response = await fetch(url);
@@ -170,7 +176,7 @@
 
     async function check() {
       const raw = document.getElementById("input").value.trim();
-      const addresses = raw.split("\n").map(x => x.trim().toLowerCase()).filter(Boolean);
+      const addresses = raw.split("\n").map(x => x.trim()).filter(Boolean);
       if (!addresses.length) return alert("请输入地址");
 
       const btn = document.getElementById("queryBtn");
@@ -184,55 +190,65 @@
       table.style.display = "table";
       summary.innerText = "";
 
-      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0, unemetaCount = 0, owltoCount = 0, sonovaCount = 0, velodromeCount = 0;
+      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0,
+          unemetaCount = 0, owltoCount = 0, sonovaCount = 0, velodromeCount = 0, wavexCount = 0, wavexNFTCount = 0;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
-        const row = document.createElement("tr");
-
-        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false, hasUnemeta = false, hasOwlto = false, hasSonova = false, hasVelodrome = false;
-        const hasSonusList = sonusBadgeSet.has(addr);
-
+        let checksumAddr;
         try {
-          const res721 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`);
-          const json721 = await res721.json();
-          const items721 = json721.items || [];
-
-          const checkNFT = (nft) => items721.some(item => item.token?.address?.toLowerCase() === nft.toLowerCase());
-
-          hasKyo = checkNFT(kyoNFT);
-          hasSake = checkNFT(sakeNFT);
-          hasSonusNFT = checkNFT(sonusNFT);
-          hasUnemeta = checkNFT(unemetaNFT);
-          hasSonova = checkNFT(sonovaNFT);
-          hasVelodrome = checkNFT(velodromeNFT);
-
-          if (hasKyo) kyoCount++;
-          if (hasSake) sakeCount++;
-          if (hasSonusNFT) sonusNFTCount++;
-          if (hasSonusList) sonusListCount++;
-          if (hasUnemeta) unemetaCount++;
-          if (hasSonova) sonovaCount++;
-          if (hasVelodrome) velodromeCount++;
-
-          const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-1155`);
-          const json1155 = await res1155.json();
-          const items1155 = json1155.items || [];
-
-          hasOG = items1155.some(item => item.token?.address?.toLowerCase() === ogNFT.toLowerCase());
-          hasOwlto = items1155.some(item => item.token?.address?.toLowerCase() === owltoNFT.toLowerCase());
-
-          if (hasOG) ogCount++;
-          if (hasOwlto) owltoCount++;
-
-        } catch (e) {
+          checksumAddr = ethers.utils.getAddress(addr);
+        } catch {
+          const row = document.createElement("tr");
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="10">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="12">❌ 地址格式错误</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome ? "success" : "fail";
+        const row = document.createElement("tr");
+        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false, hasUnemeta = false, hasOwlto = false,
+            hasSonova = false, hasVelodrome = false, hasWavex = false, hasWavexNFT = false;
+        const hasSonusList = sonusBadgeSet.has(addr.toLowerCase());
+
+        try {
+          const res721 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${checksumAddr}/tokens?type=ERC-721`);
+          const json721 = await res721.json();
+          const items721 = json721.items || [];
+          const checkNFT = (nft) => items721.some(item => item.token?.address?.toLowerCase() === nft.toLowerCase());
+
+          hasKyo = checkNFT(kyoNFT); if (hasKyo) kyoCount++;
+          hasSake = checkNFT(sakeNFT); if (hasSake) sakeCount++;
+          hasSonusNFT = checkNFT(sonusNFT); if (hasSonusNFT) sonusNFTCount++;
+          hasUnemeta = checkNFT(unemetaNFT); if (hasUnemeta) unemetaCount++;
+          hasSonova = checkNFT(sonovaNFT); if (hasSonova) sonovaCount++;
+          hasVelodrome = checkNFT(velodromeNFT); if (hasVelodrome) velodromeCount++;
+          hasWavexNFT = checkNFT(wavexNFT); if (hasWavexNFT) wavexNFTCount++;
+          if (hasSonusList) sonusListCount++;
+
+          const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${checksumAddr}/tokens?type=ERC-1155`);
+          const json1155 = await res1155.json();
+          const items1155 = json1155.items || [];
+
+          hasOG = items1155.some(item => item.token?.address?.toLowerCase() === ogNFT.toLowerCase());
+          if (hasOG) ogCount++;
+
+          hasOwlto = items1155.some(item => item.token?.address?.toLowerCase() === owltoNFT.toLowerCase());
+          if (hasOwlto) owltoCount++;
+
+          const resWavex = await fetch(`https://wavex-fi.vercel.app/api/proxy?address=${checksumAddr}`);
+          const jsonWavex = await resWavex.json();
+          hasWavex = jsonWavex && Array.isArray(jsonWavex.data) && jsonWavex.data.length > 10;
+          if (hasWavex) wavexCount++;
+
+        } catch (e) {
+          row.className = "fail";
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="12">❌ 查询失败</td>`;
+          tbody.appendChild(row);
+          continue;
+        }
+
+        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT ? "success" : "fail";
         row.innerHTML = `
           <td>${i + 1}</td>
           <td>${addr}</td>
@@ -245,11 +261,13 @@
           <td>${hasOwlto ? "✅ 是" : "❌ 否"}</td>
           <td>${hasSonova ? "✅ 是" : "❌ 否"}</td>
           <td>${hasVelodrome ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasWavex ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasWavexNFT ? "✅ 是" : "❌ 否"}</td>
         `;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
