@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      max-width: 900px;
+      max-width: 100%;
       margin: auto;
       padding: 30px;
       background: #fdfdfd;
@@ -37,11 +37,16 @@
       background: #9e9e9e;
       cursor: not-allowed;
     }
-    table {
+    .table-wrapper {
       width: 100%;
+      overflow-x: auto;
+    }
+    table {
       margin-top: 20px;
       border-collapse: collapse;
       font-size: 14px;
+      white-space: nowrap;
+      min-width: 1100px;
     }
     th, td {
       padding: 10px;
@@ -75,7 +80,6 @@
   <a href="https://soneiumevent.unemeta.com/mint" target="_blank" class="link-btn">🎁 领取 Unemeta 徽章</a>
   <a href="https://owlto.finance/soneium-badge" target="_blank" class="link-btn">🎁 领取 Owlto 徽章</a>
 
-  <!-- 统计信息顺序优化后 -->
   <div class="summary" id="sonusQualified"></div>
   <div class="summary" id="kyoHolders"></div>
   <div class="summary" id="sakeHolders"></div>
@@ -83,24 +87,28 @@
   <div class="summary" id="ogHolders"></div>
   <div class="summary" id="unemetaHolders"></div>
   <div class="summary" id="owltoHolders"></div>
+  <div class="summary" id="sonovaHolders"></div>
   <div class="summary" id="summary"></div>
 
-  <table id="resultTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>序号</th>
-        <th>地址</th>
-        <th>KYO 徽章</th>
-        <th>Sake 徽章</th>
-        <th>Sonus资格</th>
-        <th>Sonus徽章</th>
-        <th>OG 徽章</th>
-        <th>Unemeta 徽章</th>
-        <th>Owlto 徽章</th>
-      </tr>
-    </thead>
-    <tbody id="resultBody"></tbody>
-  </table>
+  <div class="table-wrapper">
+    <table id="resultTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>序号</th>
+          <th>地址</th>
+          <th>KYO 徽章</th>
+          <th>Sake 徽章</th>
+          <th>Sonus资格</th>
+          <th>Sonus徽章</th>
+          <th>OG 徽章</th>
+          <th>Unemeta 徽章</th>
+          <th>Owlto 徽章</th>
+          <th>Sonova 徽章</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+  </div>
 
   <div class="footer">
     作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a>
@@ -111,19 +119,21 @@
     const sakeNFT = "0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3";
     const sonusNFT = "0x066aba7c3520e300113c0515ff41c084ee0c95ea";
     const ogNFT = "0x2A21B17E366836e5FFB19bd47edB03b4b551C89d";
-    const unemetaNFT = "0xCA707D22E248740aDaA9C63580F7A35201B18d30"; // Unemeta 合约地址（改为从 ERC-721 接口查询）
-    const owltoNFT = "0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb"; // Owlto 合约地址
+    const unemetaNFT = "0xCA707D22E248740aDaA9C63580F7A35201B18d30";
+    const owltoNFT = "0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb";
+    const sonovaNFT = "0x4A33e2E308E5d9C0188d209F1bF443Ff7CfB4A31";
+
     let sonusBadgeSet = new Set();
 
-    // 获取徽章持有人数
     async function fetchBadgeHolders() {
       const badgeAPIs = [
-        { url: "https://soneium.blockscout.com/api/v2/tokens/0x2A21B17E366836e5FFB19bd47edB03b4b551C89d", id: "ogHolders" }, // OG徽章
-        { url: "https://soneium.blockscout.com/api/v2/tokens/0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3", id: "sakeHolders" }, // Sake徽章
-        { url: "https://soneium.blockscout.com/api/v2/tokens/0x11b2876c58cfb7501db60d0112af8a8efeb0a81d", id: "kyoHolders" }, // KYO徽章
-        { url: "https://soneium.blockscout.com/api/v2/tokens/0x066aba7c3520e300113c0515ff41c084ee0c95ea", id: "sonusHolders" }, // Sonus徽章
-        { url: "https://soneium.blockscout.com/api/v2/tokens/0xCA707D22E248740aDaA9C63580F7A35201B18d30", id: "unemetaHolders" }, // Unemeta徽章
-        { url: "https://soneium.blockscout.com/api/v2/tokens/0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb", id: "owltoHolders" } // Owlto徽章
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${ogNFT}`, id: "ogHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${sakeNFT}`, id: "sakeHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${kyoNFT}`, id: "kyoHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonusNFT}`, id: "sonusHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${unemetaNFT}`, id: "unemetaHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${owltoNFT}`, id: "owltoHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonovaNFT}`, id: "sonovaHolders" }
       ];
 
       for (let { url, id } of badgeAPIs) {
@@ -132,12 +142,11 @@
           const data = await response.json();
           document.getElementById(id).innerText = `📊 当前持有 ${id.replace('Holders', '')} 徽章的钱包数：${data.holders}`;
         } catch (err) {
-          console.error(`无法加载 ${id} 数据：`, err);
+          document.getElementById(id).innerText = `❌ 无法加载 ${id} 数据：${err.message}`;
         }
       }
     }
 
-    // 加载 Sonus 徽章资格数据
     async function loadSonusBadgeData() {
       try {
         const res = await fetch("https://badge.sonus.exchange/static/js/main.dace8027.js");
@@ -171,59 +180,53 @@
       table.style.display = "table";
       summary.innerText = "";
 
-      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0, unemetaCount = 0, owltoCount = 0;
+      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0, unemetaCount = 0, owltoCount = 0, sonovaCount = 0;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
         const row = document.createElement("tr");
 
-        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false, hasUnemeta = false, hasOwlto = false;
+        let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false, hasUnemeta = false, hasOwlto = false, hasSonova = false;
         const hasSonusList = sonusBadgeSet.has(addr);
 
         try {
-          // ERC-721查询
           const res721 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-721`);
           const json721 = await res721.json();
           const items721 = json721.items || [];
 
-          const kyoItem = items721.find(item => item.token?.address?.toLowerCase() === kyoNFT.toLowerCase());
-          const sakeItem = items721.find(item => item.token?.address?.toLowerCase() === sakeNFT.toLowerCase());
-          const sonusItem = items721.find(item => item.token?.address?.toLowerCase() === sonusNFT.toLowerCase());
-          // 现在将 Unemeta 徽章也从 ERC-721 中查找
-          const unemetaItem = items721.find(item => item.token?.address?.toLowerCase() === unemetaNFT.toLowerCase());
+          const checkNFT = (nft) => items721.some(item => item.token?.address?.toLowerCase() === nft.toLowerCase());
 
-          hasKyo = !!kyoItem;
-          hasSake = !!sakeItem;
-          hasSonusNFT = !!sonusItem;
-          hasUnemeta = !!unemetaItem;
+          hasKyo = checkNFT(kyoNFT);
+          hasSake = checkNFT(sakeNFT);
+          hasSonusNFT = checkNFT(sonusNFT);
+          hasUnemeta = checkNFT(unemetaNFT);
+          hasSonova = checkNFT(sonovaNFT);
 
           if (hasKyo) kyoCount++;
           if (hasSake) sakeCount++;
-          if (hasSonusList) sonusListCount++;
           if (hasSonusNFT) sonusNFTCount++;
+          if (hasSonusList) sonusListCount++;
           if (hasUnemeta) unemetaCount++;
+          if (hasSonova) sonovaCount++;
 
-          // ERC-1155查询
           const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${addr}/tokens?type=ERC-1155`);
           const json1155 = await res1155.json();
           const items1155 = json1155.items || [];
 
-          const ogItem = items1155.find(item => item.token?.address?.toLowerCase() === ogNFT.toLowerCase());
-          hasOG = !!ogItem;
-          if (hasOG) ogCount++;
+          hasOG = items1155.some(item => item.token?.address?.toLowerCase() === ogNFT.toLowerCase());
+          hasOwlto = items1155.some(item => item.token?.address?.toLowerCase() === owltoNFT.toLowerCase());
 
-          const owltoItem = items1155.find(item => item.token?.address?.toLowerCase() === owltoNFT.toLowerCase());
-          hasOwlto = !!owltoItem;
+          if (hasOG) ogCount++;
           if (hasOwlto) owltoCount++;
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="8">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="9">❌ 查询失败</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto ? "success" : "fail";
+        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova ? "success" : "fail";
         row.innerHTML = `
           <td>${i + 1}</td>
           <td>${addr}</td>
@@ -234,11 +237,12 @@
           <td>${hasOG ? "✅ 是" : "❌ 否"}</td>
           <td>${hasUnemeta ? "✅ 是" : "❌ 否"}</td>
           <td>${hasOwlto ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasSonova ? "✅ 是" : "❌ 否"}</td>
         `;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
@@ -246,6 +250,5 @@
     loadSonusBadgeData();
     fetchBadgeHolders();
   </script>
-
 </body>
 </html>
