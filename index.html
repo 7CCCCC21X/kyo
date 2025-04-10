@@ -93,6 +93,7 @@
   <div class="summary" id="velodromeHolders"></div>
   <div class="summary" id="wavexHolders"></div>
   <div class="summary" id="untitledBankHolders"></div>
+  <div class="summary" id="sonefiHolders"></div>
   <div class="summary" id="summary"></div>
 
   <div class="table-wrapper">
@@ -113,6 +114,7 @@
           <th>WaveX 资格</th>
           <th>WaveX 徽章</th>
           <th>UntitledBank 徽章</th>
+          <th>SoneFi 徽章</th>
         </tr>
       </thead>
       <tbody id="resultBody"></tbody>
@@ -133,6 +135,7 @@
     const velodromeNFT = "0x2DCD9B33F0721000Dc1F8f84B804d4CFA23d7713";
     const wavexNFT = "0x4a3b67b339c272fab639b0caf3ce7852b2aa0833";
     const untitledBankNFT = "0xcf87B2d5Ab008D41159f6737E2a5b6a3Bc40b753";
+    const sonefiNFT = "0x6DD843fe15dbFD41F001d448cb246ac8b65a6027";
 
     let sonusBadgeSet = new Set();
 
@@ -147,7 +150,8 @@
         { url: `https://soneium.blockscout.com/api/v2/tokens/${sonovaNFT}`, id: "sonovaHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${velodromeNFT}`, id: "velodromeHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${wavexNFT}`, id: "wavexHolders" },
-        { url: `https://soneium.blockscout.com/api/v2/tokens/${untitledBankNFT}`, id: "untitledBankHolders" }
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${untitledBankNFT}`, id: "untitledBankHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonefiNFT}`, id: "sonefiHolders" }
       ];
       for (let { url, id } of badgeAPIs) {
         try {
@@ -195,7 +199,7 @@
 
       let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0,
           unemetaCount = 0, owltoCount = 0, sonovaCount = 0, velodromeCount = 0,
-          wavexCount = 0, wavexNFTCount = 0, untitledBankCount = 0;
+          wavexCount = 0, wavexNFTCount = 0, untitledBankCount = 0, sonefiCount = 0;
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
@@ -205,7 +209,7 @@
         } catch {
           const row = document.createElement("tr");
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="13">❌ 地址格式错误</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="14">❌ 地址格式错误</td>`;
           tbody.appendChild(row);
           continue;
         }
@@ -213,7 +217,7 @@
         const row = document.createElement("tr");
         let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false,
             hasUnemeta = false, hasOwlto = false, hasSonova = false, hasVelodrome = false,
-            hasWavex = false, hasWavexNFT = false, hasUntitledBank = false;
+            hasWavex = false, hasWavexNFT = false, hasUntitledBank = false, hasSonefi = false;
         const hasSonusList = sonusBadgeSet.has(addr.toLowerCase());
 
         try {
@@ -241,6 +245,9 @@
           hasOwlto = items1155.some(item => item.token?.address?.toLowerCase() === owltoNFT.toLowerCase());
           if (hasOwlto) owltoCount++;
 
+          hasSonefi = items1155.some(item => item.token?.address?.toLowerCase() === sonefiNFT.toLowerCase());
+          if (hasSonefi) sonefiCount++;
+
           const resWavex = await fetch(`https://wavex-fi.vercel.app/api/proxy?address=${checksumAddr}`);
           const jsonWavex = await resWavex.json();
           hasWavex = jsonWavex && Array.isArray(jsonWavex.data) && jsonWavex.data.length > 10;
@@ -248,12 +255,12 @@
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="13">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="14">❌ 查询失败</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT || hasUntitledBank ? "success" : "fail";
+        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT || hasUntitledBank || hasSonefi ? "success" : "fail";
         row.innerHTML = `
           <td>${i + 1}</td>
           <td>${addr}</td>
@@ -269,11 +276,12 @@
           <td>${hasWavex ? "✅ 是" : "❌ 否"}</td>
           <td>${hasWavexNFT ? "✅ 是" : "❌ 否"}</td>
           <td>${hasUntitledBank ? "✅ 是" : "❌ 否"}</td>
+          <td>${hasSonefi ? "✅ 是" : "❌ 否"}</td>
         `;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}，UntitledBank徽章：${untitledBankCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}，UntitledBank徽章：${untitledBankCount}，SoneFi徽章：${sonefiCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
