@@ -90,6 +90,7 @@
   <div class="summary" id="unemetaHolders"></div>
   <div class="summary" id="owltoHolders"></div>
   <div class="summary" id="sonovaHolders"></div>
+  <div class="summary" id="orbiterHolders"></div>
   <div class="summary" id="velodromeHolders"></div>
   <div class="summary" id="wavexHolders"></div>
   <div class="summary" id="untitledBankHolders"></div>
@@ -106,6 +107,7 @@
           <th>Sake 徽章</th>
           <th>Sonus资格</th>
           <th>Sonus徽章</th>
+          <th>Orbiter 徽章</th>
           <th>OG 徽章</th>
           <th>Unemeta 徽章</th>
           <th>Owlto 徽章</th>
@@ -132,6 +134,7 @@
     const unemetaNFT = "0xCA707D22E248740aDaA9C63580F7A35201B18d30";
     const owltoNFT = "0x1eC6AACC79f3c4817d7fea2268e1c54C6b2662Fb";
     const sonovaNFT = "0x4A33e2E308E5d9C0188d209F1bF443Ff7CfB4A31";
+    const orbiterNFT = "0xc59f0D1B1b614d8446dDe1760fc3e6ae57bF9501";
     const velodromeNFT = "0x2DCD9B33F0721000Dc1F8f84B804d4CFA23d7713";
     const wavexNFT = "0x4a3b67b339c272fab639b0caf3ce7852b2aa0833";
     const untitledBankNFT = "0xcf87B2d5Ab008D41159f6737E2a5b6a3Bc40b753";
@@ -148,6 +151,7 @@
         { url: `https://soneium.blockscout.com/api/v2/tokens/${unemetaNFT}`, id: "unemetaHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${owltoNFT}`, id: "owltoHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${sonovaNFT}`, id: "sonovaHolders" },
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${orbiterNFT}`, id: "orbiterHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${velodromeNFT}`, id: "velodromeHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${wavexNFT}`, id: "wavexHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${untitledBankNFT}`, id: "untitledBankHolders" },
@@ -197,7 +201,7 @@
       table.style.display = "table";
       summary.innerText = "";
 
-      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, ogCount = 0,
+      let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, orbiterCount = 0, ogCount = 0,
           unemetaCount = 0, owltoCount = 0, sonovaCount = 0, velodromeCount = 0,
           wavexCount = 0, wavexNFTCount = 0, untitledBankCount = 0, sonefiCount = 0;
 
@@ -209,14 +213,14 @@
         } catch {
           const row = document.createElement("tr");
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="14">❌ 地址格式错误</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="15">❌ 地址格式错误</td>`;
           tbody.appendChild(row);
           continue;
         }
 
         const row = document.createElement("tr");
         let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false,
-            hasUnemeta = false, hasOwlto = false, hasSonova = false, hasVelodrome = false,
+            hasUnemeta = false, hasOwlto = false, hasSonova = false, hasOrbiter = false, hasVelodrome = false,
             hasWavex = false, hasWavexNFT = false, hasUntitledBank = false, hasSonefi = false;
         const hasSonusList = sonusBadgeSet.has(addr.toLowerCase());
 
@@ -229,11 +233,14 @@
           hasKyo = checkNFT(kyoNFT); if (hasKyo) kyoCount++;
           hasSake = checkNFT(sakeNFT); if (hasSake) sakeCount++;
           hasSonusNFT = checkNFT(sonusNFT); if (hasSonusNFT) sonusNFTCount++;
+          hasOrbiter = checkNFT(orbiterNFT); if (hasOrbiter) orbiterCount++;
           hasUnemeta = checkNFT(unemetaNFT); if (hasUnemeta) unemetaCount++;
           hasSonova = checkNFT(sonovaNFT); if (hasSonova) sonovaCount++;
           hasVelodrome = checkNFT(velodromeNFT); if (hasVelodrome) velodromeCount++;
           hasWavexNFT = checkNFT(wavexNFT); if (hasWavexNFT) wavexNFTCount++;
           hasUntitledBank = checkNFT(untitledBankNFT); if (hasUntitledBank) untitledBankCount++;
+          
+          // 新增：符合 Sonus 资格的地址计数
           if (hasSonusList) sonusListCount++;
 
           const res1155 = await fetch(`https://soneium.blockscout.com/api/v2/addresses/${checksumAddr}/tokens?type=ERC-1155`);
@@ -255,33 +262,33 @@
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="14">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="15">❌ 查询失败</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT || hasUntitledBank || hasSonefi ? "success" : "fail";
-        row.innerHTML = `
-          <td>${i + 1}</td>
-          <td>${addr}</td>
-          <td>${hasKyo ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasSake ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasSonusList ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasSonusNFT ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasOG ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasUnemeta ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasOwlto ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasSonova ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasVelodrome ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasWavex ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasWavexNFT ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasUntitledBank ? "✅ 是" : "❌ 否"}</td>
-          <td>${hasSonefi ? "✅ 是" : "❌ 否"}</td>
-        `;
+        row.className = (hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOrbiter || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT || hasUntitledBank || hasSonefi) ? "success" : "fail";
+        row.innerHTML = 
+          `<td>${i + 1}</td>
+           <td>${addr}</td>
+           <td>${hasKyo ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasSake ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasSonusList ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasSonusNFT ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasOrbiter ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasOG ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasUnemeta ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasOwlto ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasSonova ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasVelodrome ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasWavex ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasWavexNFT ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasUntitledBank ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasSonefi ? "✅ 是" : "❌ 否"}</td>`;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}，UntitledBank徽章：${untitledBankCount}，SoneFi徽章：${sonefiCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，Orbiter：${orbiterCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}，UntitledBank徽章：${untitledBankCount}，SoneFi徽章：${sonefiCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
