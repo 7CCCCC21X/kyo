@@ -72,7 +72,6 @@
   </style>
 </head>
 <body>
-
   <h2>索尼徽章批量查询（陆续更新）</h2>
   <p>每行一个钱包地址：</p>
   <textarea id="input" placeholder=""></textarea><br>
@@ -95,6 +94,7 @@
   <div class="summary" id="wavexHolders"></div>
   <div class="summary" id="untitledBankHolders"></div>
   <div class="summary" id="sonefiHolders"></div>
+  <div class="summary" id="quickHolders"></div>
   <div class="summary" id="summary"></div>
 
   <div class="table-wrapper">
@@ -117,6 +117,7 @@
           <th>WaveX 徽章</th>
           <th>UntitledBank 徽章</th>
           <th>SoneFi 徽章</th>
+          <th>Quick 徽章</th>
         </tr>
       </thead>
       <tbody id="resultBody"></tbody>
@@ -127,6 +128,7 @@
   </div>
 
   <script>
+    // 各NFT合约地址
     const kyoNFT = "0x11b2876c58cfb7501db60d0112af8a8efeb0a81d";
     const sakeNFT = "0x3a634e6f8c2bf2c5894722b908d99e3cf9c62ed3";
     const sonusNFT = "0x066aba7c3520e300113c0515ff41c084ee0c95ea";
@@ -139,6 +141,8 @@
     const wavexNFT = "0x4a3b67b339c272fab639b0caf3ce7852b2aa0833";
     const untitledBankNFT = "0xcf87B2d5Ab008D41159f6737E2a5b6a3Bc40b753";
     const sonefiNFT = "0x6DD843fe15dbFD41F001d448cb246ac8b65a6027";
+    // 新增 Quick徽章 合约地址
+    const quickNFT = "0x5C0221a8c3eB5956b70cDC572fA0F6C952274f1A";
 
     let sonusBadgeSet = new Set();
 
@@ -155,7 +159,9 @@
         { url: `https://soneium.blockscout.com/api/v2/tokens/${velodromeNFT}`, id: "velodromeHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${wavexNFT}`, id: "wavexHolders" },
         { url: `https://soneium.blockscout.com/api/v2/tokens/${untitledBankNFT}`, id: "untitledBankHolders" },
-        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonefiNFT}`, id: "sonefiHolders" }
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${sonefiNFT}`, id: "sonefiHolders" },
+        // 新增 Quick徽章查询
+        { url: `https://soneium.blockscout.com/api/v2/tokens/${quickNFT}`, id: "quickHolders" }
       ];
       for (let { url, id } of badgeAPIs) {
         try {
@@ -203,7 +209,8 @@
 
       let kyoCount = 0, sakeCount = 0, sonusListCount = 0, sonusNFTCount = 0, orbiterCount = 0, ogCount = 0,
           unemetaCount = 0, owltoCount = 0, sonovaCount = 0, velodromeCount = 0,
-          wavexCount = 0, wavexNFTCount = 0, untitledBankCount = 0, sonefiCount = 0;
+          wavexCount = 0, wavexNFTCount = 0, untitledBankCount = 0, sonefiCount = 0,
+          quickCount = 0;  // 新增 Quick 徽章计数
 
       for (let i = 0; i < addresses.length; i++) {
         const addr = addresses[i];
@@ -213,7 +220,7 @@
         } catch {
           const row = document.createElement("tr");
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="15">❌ 地址格式错误</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="17">❌ 地址格式错误</td>`;
           tbody.appendChild(row);
           continue;
         }
@@ -222,6 +229,7 @@
         let hasKyo = false, hasSake = false, hasSonusNFT = false, hasOG = false,
             hasUnemeta = false, hasOwlto = false, hasSonova = false, hasOrbiter = false, hasVelodrome = false,
             hasWavex = false, hasWavexNFT = false, hasUntitledBank = false, hasSonefi = false;
+        let hasQuick = false;
         const hasSonusList = sonusBadgeSet.has(addr.toLowerCase());
 
         try {
@@ -239,7 +247,9 @@
           hasVelodrome = checkNFT(velodromeNFT); if (hasVelodrome) velodromeCount++;
           hasWavexNFT = checkNFT(wavexNFT); if (hasWavexNFT) wavexNFTCount++;
           hasUntitledBank = checkNFT(untitledBankNFT); if (hasUntitledBank) untitledBankCount++;
-          
+          // 新增 Quick 徽章检测
+          hasQuick = checkNFT(quickNFT); if (hasQuick) quickCount++;
+
           // 新增：符合 Sonus 资格的地址计数
           if (hasSonusList) sonusListCount++;
 
@@ -262,12 +272,12 @@
 
         } catch (e) {
           row.className = "fail";
-          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="15">❌ 查询失败</td>`;
+          row.innerHTML = `<td>${i + 1}</td><td>${addr}</td><td colspan="17">❌ 查询失败</td>`;
           tbody.appendChild(row);
           continue;
         }
 
-        row.className = (hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOrbiter || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT || hasUntitledBank || hasSonefi) ? "success" : "fail";
+        row.className = (hasKyo || hasSake || hasSonusList || hasSonusNFT || hasOrbiter || hasOG || hasUnemeta || hasOwlto || hasSonova || hasVelodrome || hasWavex || hasWavexNFT || hasUntitledBank || hasSonefi || hasQuick) ? "success" : "fail";
         row.innerHTML = 
           `<td>${i + 1}</td>
            <td>${addr}</td>
@@ -284,11 +294,12 @@
            <td>${hasWavex ? "✅ 是" : "❌ 否"}</td>
            <td>${hasWavexNFT ? "✅ 是" : "❌ 否"}</td>
            <td>${hasUntitledBank ? "✅ 是" : "❌ 否"}</td>
-           <td>${hasSonefi ? "✅ 是" : "❌ 否"}</td>`;
+           <td>${hasSonefi ? "✅ 是" : "❌ 否"}</td>
+           <td>${hasQuick ? "✅ 是" : "❌ 否"}</td>`;
         tbody.appendChild(row);
       }
 
-      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，Orbiter：${orbiterCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}，UntitledBank徽章：${untitledBankCount}，SoneFi徽章：${sonefiCount}`;
+      summary.innerText = `✅ 总地址数：${addresses.length}，KYO：${kyoCount}，Sake：${sakeCount}，Sonus资格：${sonusListCount}，Sonus徽章：${sonusNFTCount}，Orbiter：${orbiterCount}，OG徽章：${ogCount}，Unemeta徽章：${unemetaCount}，Owlto徽章：${owltoCount}，Sonova徽章：${sonovaCount}，Velodrome徽章：${velodromeCount}，WaveX资格：${wavexCount}，WaveX徽章：${wavexNFTCount}，UntitledBank徽章：${untitledBankCount}，SoneFi徽章：${sonefiCount}，Quick徽章：${quickCount}`;
       btn.innerText = "开始查询";
       btn.disabled = false;
     }
